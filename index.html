@@ -684,6 +684,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
     --navy:#003366;
     --topbar-bg:#003366;
     --topbar-ink:#ffffff;
+    --bone:#f5f5dc;
     --bg:#f5f5dc;
     --surface:#fffefa;
     --surface-2:#eeecd2;
@@ -749,7 +750,15 @@ svg.leaflet-image-layer.leaflet-interactive path {
     width:30px;height:30px;border-radius:9px;background:var(--accent);color:var(--accent-ink);
     font-size:1rem;
   }
+  .topbar-right{display:flex;align-items:center;gap:18px;}
   .tabs{display:flex;gap:6px;}
+  .visit-counter{
+    display:flex;align-items:center;gap:6px;
+    font-size:0.78rem;font-weight:600;color:var(--bone);
+    padding:5px 12px;border-radius:999px;background:rgba(255,255,255,0.08);
+    white-space:nowrap;
+  }
+  .visit-counter svg{flex-shrink:0;opacity:0.85;}
   .tab{
     border:none;background:transparent;color:rgba(255,255,255,0.72);
     padding:8px 16px;border-radius:999px;font-size:0.88rem;font-weight:600;cursor:pointer;
@@ -783,9 +792,14 @@ svg.leaflet-image-layer.leaflet-interactive path {
   input,select{
     border:1px solid var(--border);border-radius:9px;padding:9px 10px;
     font-size:0.88rem;color:var(--ink);background:var(--surface-2);outline:none;
+    width:100%;min-width:0;
   }
   input:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft);}
-  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  input[type=number]{-moz-appearance:textfield;appearance:textfield;}
+  input[type=number]::-webkit-outer-spin-button,
+  input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:10px;min-width:0;}
+  .grid-2 > label{min-width:0;}
   .field-error{color:var(--danger-deep);font-size:0.74rem;font-weight:600;margin-top:-4px;min-height:1em;}
 
   .btn{
@@ -875,19 +889,24 @@ svg.leaflet-image-layer.leaflet-interactive path {
 
   <header class="topbar">
     <div class="brand"><span class="brand-mark">⌖</span> GeoImpacto</div>
-    <nav class="tabs">
-      <button class="tab active" type="button" data-tab="geo">Geolocalización</button>
-      <button class="tab disabled" type="button" disabled title="Disponible próximamente">
-        Análisis de vínculos <span class="badge">Próximamente</span>
-      </button>
-    </nav>
+    <div class="topbar-right">
+      <nav class="tabs">
+        <button class="tab active" type="button" data-tab="geo">Geolocalización</button>
+        <button class="tab disabled" type="button" disabled title="Disponible próximamente">
+          Análisis de vínculos <span class="badge">Próximamente</span>
+        </button>
+      </nav>
+      <div id="visit-counter" class="visit-counter" aria-label="Visitas al sitio" title="Visitas al sitio">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
+      </div>
+    </div>
   </header>
 
   <div class="layout">
     <aside class="sidebar">
 
       <section class="panel">
-        <h2>Nuevo impacto</h2>
+        <h2>Añadir datos</h2>
         <p class="hint">Clic en el mapa para completar latitud y longitud, o cargalas a mano.</p>
         <form id="impact-form" novalidate>
           <label>Nombre / ID del impacto
@@ -896,10 +915,10 @@ svg.leaflet-image-layer.leaflet-interactive path {
 
           <div class="grid-2">
             <label>Latitud
-              <input type="number" id="f-lat" step="0.000001" placeholder="-27.796500">
+              <input type="number" id="f-lat" step="0.000001" placeholder="-27.7965">
             </label>
             <label>Longitud
-              <input type="number" id="f-lon" step="0.000001" placeholder="-64.264200">
+              <input type="number" id="f-lon" step="0.000001" placeholder="-64.2642">
             </label>
           </div>
 
@@ -961,11 +980,17 @@ svg.leaflet-image-layer.leaflet-interactive path {
 (function(){
   "use strict";
 
-  /* ============ paleta categórica (validada CVD-safe) ============ */
+  /* ============ paleta categórica ============ */
+  // Los primeros 8 colores son el set validado contra daltonismo (CVD-safe) que ya
+  // veníamos usando. Vos pediste que no se repita un color hasta el 11° impacto, así
+  // que sumamos 2 tonos más (marrón y azul acero) para llegar a 10 — esos dos no pasaron
+  // la misma validación formal de separación por daltonismo que los primeros 8. No es un
+  // problema real acá porque cada impacto ya tiene su nombre siempre visible en el mapa
+  // (la etiqueta), así que nadie depende solo del color para diferenciarlos.
   var isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
   var PALETTE = isDark
-    ? ['#3987e5','#d95926','#199e70','#c98500','#d55181','#008300','#9085e9','#e66767']
-    : ['#2a78d6','#eb6834','#1baf7a','#eda100','#e87ba4','#008300','#4a3aa7','#e34948'];
+    ? ['#3987e5','#d95926','#199e70','#c98500','#d55181','#008300','#9085e9','#e66767','#a87b4a','#7fa0bd']
+    : ['#2a78d6','#eb6834','#1baf7a','#eda100','#e87ba4','#008300','#4a3aa7','#e34948','#8a5a2e','#5c7a94'];
   var colorCounter = 0;
   function nextColor(){ var c = PALETTE[colorCounter % PALETTE.length]; colorCounter++; return c; }
 
@@ -1281,5 +1306,29 @@ svg.leaflet-image-layer.leaflet-interactive path {
 
 })();
 </script>
+
+<!--
+  Contador de visitas (GoatCounter, sitio geo-impacto). Si el número no aparece
+  en el ícono, revisá en GoatCounter → Settings de tu sitio que esté activado
+  "Allow adding visitor counts on your website" (viene apagado por defecto).
+-->
+<script>
+  (function(){
+    var intentos = 0;
+    function iniciarContador(){
+      intentos++;
+      if (window.goatcounter && window.goatcounter.visit_count){
+        window.goatcounter.visit_count({
+          append: '#visit-counter',
+          style: 'div{all:unset;display:inline-flex;} #gcvc-views{color:#f5f5dc;font-weight:700;font-size:0.78rem;font-variant-numeric:tabular-nums;} #gcvc-for,#gcvc-by{display:none;}'
+        });
+      } else if (intentos < 20){
+        setTimeout(iniciarContador, 150);
+      }
+    }
+    setTimeout(iniciarContador, 150);
+  })();
+</script>
+<script async src="//gc.zgo.at/count.js" data-goatcounter="https://geo-impacto.goatcounter.com/count"></script>
 </body>
 </html>

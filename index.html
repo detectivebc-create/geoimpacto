@@ -753,12 +753,18 @@ svg.leaflet-image-layer.leaflet-interactive path {
   .topbar-right{display:flex;align-items:center;gap:18px;}
   .tabs{display:flex;gap:6px;}
   .visit-counter{
-    display:flex;align-items:center;gap:6px;
-    font-size:0.78rem;font-weight:600;color:var(--bone);
-    padding:5px 12px;border-radius:999px;background:rgba(255,255,255,0.08);
+    display:flex;align-items:center;gap:4px;
+    font-size:0.68rem;font-weight:600;color:var(--bone);
+    opacity:0.75;
     white-space:nowrap;
+    max-width:64px;max-height:20px;overflow:hidden;
   }
-  .visit-counter svg{flex-shrink:0;opacity:0.85;}
+  .visit-counter svg{flex-shrink:0;width:11px;height:11px;}
+  /* Blindaje: lo que GoatCounter agregue adentro no puede traer su propia caja,
+     borde ni fondo — solo el número, heredando el tamaño y color de acá. */
+  .visit-counter div{all:unset !important;display:inline !important;}
+  .visit-counter #gcvc-views{font:inherit !important;color:inherit !important;}
+  .visit-counter #gcvc-for,.visit-counter #gcvc-by{display:none !important;}
   .tab{
     border:none;background:transparent;color:rgba(255,255,255,0.72);
     padding:8px 16px;border-radius:999px;font-size:0.88rem;font-weight:600;cursor:pointer;
@@ -1297,12 +1303,9 @@ svg.leaflet-image-layer.leaflet-interactive path {
       addImpacto(r);
     });
     colorCounter = saved.length;
-  } else {
-    addImpacto({
-      id:'imp-example-1', nombre:'Antena Centro (SDE)', lat:-27.7834, lon:-64.2642,
-      azimuth:45, aperturaH:120, aperturaV:120, radioKm:1.2, color: nextColor(), isExample:true
-    });
   }
+  // Ya no se precarga un impacto de ejemplo: el sitio arranca vacío, en 0.
+  render();
 
 })();
 </script>
@@ -1320,7 +1323,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
       if (window.goatcounter && window.goatcounter.visit_count){
         window.goatcounter.visit_count({
           append: '#visit-counter',
-          style: 'div{all:unset;display:inline-flex;} #gcvc-views{color:#f5f5dc;font-weight:700;font-size:0.78rem;font-variant-numeric:tabular-nums;} #gcvc-for,#gcvc-by{display:none;}'
+          style: 'div{all:unset;display:inline;} #gcvc-views{color:#f5f5dc;font-size:0.68rem;font-weight:600;font-variant-numeric:tabular-nums;} #gcvc-for,#gcvc-by{display:none;}'
         });
       } else if (intentos < 20){
         setTimeout(iniciarContador, 150);
